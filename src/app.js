@@ -85,7 +85,6 @@ async function fetchArbaData(lat, lng) {
 
     await page.type('#inputfindall', `${lat},${lng}`);
 
-    // Preferencia: usar sugerencia si aparece; si no, Enter como fallback
     const hasSuggestion = await page.$('#ui-id-1');
     if (hasSuggestion) {
       await page.waitForSelector('#ui-id-1', { visible: true, timeout: 30000 });
