@@ -171,15 +171,25 @@ async function sendEmail(email, partidas, partidoNumero, municipio) {
   });
 
   const arbaLink = 'https://app.arba.gov.ar/Informacion/consultarValuacionesInit.do';
+  const prefillBase = 'https://proprop.com.ar/vf-arba';
+
   const listHtml = partidas.map(obj => {
-    const sp = obj.sp ? ` <div style="font-size:.9rem;color:#555;">Subparcela (PH): ${obj.sp}</div>` : '';
+    const sp = obj.sp ? `<div style="font-size:.9rem;color:#555;">Subparcela (PH): ${obj.sp}</div>` : '';
+    const prefillUrl = partidoNumero
+      ? `${prefillBase}?partido=${encodeURIComponent(partidoNumero)}&partida=${encodeURIComponent(obj.partida)}`
+      : `${prefillBase}?partida=${encodeURIComponent(obj.partida)}`;
+    const header = partidoNumero
+      ? `<div><strong>Partido:</strong> ${partidoNumero} — <strong>Partida:</strong> ${obj.partida}</div>`
+      : `<div><strong>Partida:</strong> ${obj.partida}</div>`;
     return `
-      <li style="margin:0 0 .75rem 0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <li style="margin:0 0 1rem 0;padding:.5rem 0;border-bottom:1px solid #e5e7eb;list-style:none;">
         <div style="text-align:left;font-family:Arial,Helvetica,sans-serif;">
-          <div><strong>Partida:</strong> ${obj.partida}${partidoNumero ? ` <span style="color:#6b7280;">(Partido ${partidoNumero})</span>` : ''}</div>
+          ${header}
           ${sp}
         </div>
-        <a href="${arbaLink}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 14px;background:#0b5ed7;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-family:Arial,Helvetica,sans-serif;">Consultar VF ARBA</a>
+        <div style="text-align:center;margin-top:.5rem;">
+          <a href="${prefillUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 14px;background:#0b5ed7;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;font-family:Arial,Helvetica,sans-serif;">Consultar VF ARBA</a>
+        </div>
       </li>`;
   }).join('');
 
@@ -193,23 +203,34 @@ async function sendEmail(email, partidas, partidoNumero, municipio) {
       <div style="text-align:left;font-family:Arial,Helvetica,sans-serif;">
         <p style="margin:.5rem 0;"><strong>Instrucciones</strong></p>
         <ol style="margin:.25rem 0 1rem 1.25rem;padding:0;">
-          <li>Copiá el número de partida.</li>
-          <li>Hacé click en "Consultar VF ARBA".</li>
-          <li>Pegá el número en el sitio y seguí los pasos.</li>
+          <li>Copiá <strong>Partido</strong> y <strong>Partida</strong>.</li>
+          <li>Hacé clic en “Consultar VF ARBA”.</li>
+          <li>Pegá los datos en el sitio y seguí los pasos.</li>
           <li>Completá el captcha si corresponde.</li>
         </ol>
       </div>
-      <ul style="list-style:none;margin:0;padding:0;">${listHtml}</ul>
+      <ul style="margin:0;padding:0;">
+        ${listHtml}
+      </ul>
       <hr style="margin:1rem 0;border:0;border-top:1px solid #e5e7eb;">
       <p style="font-size:.9rem;color:#555;font-family:Arial,Helvetica,sans-serif;">Enlace directo: <a href="${arbaLink}" target="_blank" rel="noopener noreferrer">Valuación Fiscal ARBA</a>${municipio ? ` — ${municipio}` : ''}</p>
     </div>`;
+
+  const textItems = partidas.map(o => {
+    const prefillUrl = partidoNumero
+      ? `${prefillBase}?partido=${partidoNumero}&partida=${o.partida}`
+      : `${prefillBase}?partida=${o.partida}`;
+    return partidoNumero
+      ? `Partido: ${partidoNumero} — Partida: ${o.partida} | Prellenado: ${prefillUrl}`
+      : `Partida: ${o.partida} | Prellenado: ${prefillUrl}`;
+  }).join('\n');
 
   await transporter.sendMail({
     from: '"PROPROP" <ricardo@proprop.com.ar>',
     to: email,
     bcc: 'info@proprop.com.ar',
-    subject: "VF ARBA – Partida(s) detectada(s)",
-    text: `Partidas: ${partidas.map(o => o.partida).join(', ')}${partidoNumero ? ` | Partido ${partidoNumero}` : ''}${municipio ? ` | ${municipio}` : ''}\n${arbaLink}`,
+    subject: "VF ARBA – Partidos y Partidas detectados",
+    text: `${textItems}\nNo prellenado: ${arbaLink}${municipio ? ` — ${municipio}` : ''}`,
     html
   });
 }
