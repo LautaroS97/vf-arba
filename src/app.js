@@ -170,7 +170,7 @@ async function sendEmail(email, partidas, partidoNumero, municipio) {
   });
 
   const arbaLink = 'https://app.arba.gov.ar/Informacion/consultarValuacionesInit.do';
-  const prefillBase = 'https://proprop.com.ar/vf-arba';
+  const prefillBase = 'https://app.arba.gov.ar/Informacion/consultarValuacionesInit.do';
 
   const listHtml = partidas.map(obj => {
     const sp = obj.sp ? `<div style="font-size:.9rem;color:#555;">Subparcela (PH): ${obj.sp}</div>` : '';
